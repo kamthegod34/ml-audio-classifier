@@ -1,0 +1,9 @@
+data/raw/
+*.wav
+*.mp3
+*.flac
+
+# standard python ignores
+.venv/
+__pycache__/
+*.pyc

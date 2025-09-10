@@ -8,3 +8,5 @@ scikit-learn
 matplotlib
 tqdm
 soundfile
+gdown
+pydub
