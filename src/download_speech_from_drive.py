@@ -1,9 +1,10 @@
 from pathlib import Path
-import shutil
 import zipfile
 import sys
 import gdown
 from pydub import AudioSegment
+import argparse
+import shutil
 
 # this folder is the one that contains the speech files on google drive
 # dont change this unless you want a different dataset
@@ -15,7 +16,7 @@ TEMP_DEST = Path("data/temp/speech_drive")
 AUDIO_EXTENSIONS = {".wav", ".mp3"}
 
 def extract_zip_files(folder : Path):
-    zips = list(folder.rglob("*.zip"))
+    zips = sorted(folder.rglob("*.zip")) # sorted allows for deterministic order 
     if not zips:
         print("no zip files found")
         return
@@ -31,15 +32,15 @@ def extract_zip_files(folder : Path):
 
 def collect_audio_files(folder : Path):
     files = []
-    for p in folder.rglob("*"):
+    for p in sorted(folder.rglob("*")):
         if p.is_file() and p.suffix.lower() in AUDIO_EXTENSIONS:
             files.append(p)
     return files
 
-def main():
+def main(keep_temp: bool):
 
-    DEST.mkdir(exist_ok=True) # dont crash if file exists
-    TEMP_DEST.mkdir(exist_ok=True)
+    DEST.mkdir(exist_ok=True, parents=True) # dont crash if file exists
+    TEMP_DEST.mkdir(exist_ok=True, parents=True)
 
     gdown.download_folder(id=FOLDER_ID, output=str(TEMP_DEST), quiet=False, use_cookies=False)
 
@@ -66,8 +67,18 @@ def main():
     
     print("converted files to wav and placed them in data/raw/speech!!!!!!")
 
+    # clean up temp folder
+    if not keep_temp:
+        shutil.rmtree(TEMP_DEST, ignore_errors=True)
+        print(f"files in {TEMP_DEST} have been deleted, to prevent this "
+              f"use conditional argument --keep-temp on startup")
+
     
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--keep-temp", default=False, action="store_true", help="condition to " \
+                                        "keep or delete temporary files during .wav conversion")
+    args = parser.parse_args()
+    main(keep_temp=args.keep_temp)
             
 

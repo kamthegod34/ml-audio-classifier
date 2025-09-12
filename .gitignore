@@ -1,4 +1,6 @@
-data/raw/
+# ignore all audio files in raw data folder except .gitkeep
+data/raw/**
+!data/raw/**/.gitkeep
 *.wav
 *.mp3
 *.flac
@@ -7,3 +9,8 @@ data/raw/
 .venv/
 __pycache__/
 *.pyc
+
+# ignore processing files
+data/processed/npz/
+data/processed/*.csv
+data/processed/meta.json
