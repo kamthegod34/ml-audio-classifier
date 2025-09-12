@@ -13,4 +13,4 @@ __pycache__/
 # ignore processing files
 data/processed/npz/
 data/processed/*.csv
-data/processed/meta.json
+data/processed/metadata.json
