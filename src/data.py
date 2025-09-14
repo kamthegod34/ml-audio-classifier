@@ -7,8 +7,8 @@ from torch.utils.data import Dataset, DataLoader
 CLASS_2_IDX = {"drone": 0, "car":1, "speech": 2} # works as a translator, changing to numbers is better for math
 
 class sample_example_loader(Dataset): # teaches how to load a sample
-    def __init__(self, csv_path: str=Path, augment: bool=False):
-        self.df = pd.read_csv("data/processed/tran.csv")
+    def __init__(self, csv_path: str | Path, augment: bool=False):
+        self.df = pd.read_csv(csv_path)
         self.augment = augment
     
     def __len__(self): # dataloader relies on __len__, you have to make this distinction
@@ -38,4 +38,25 @@ class sample_example_loader(Dataset): # teaches how to load a sample
                 time_start = np.random.randint(0, max(1,time - 8)) # np slicing CAN go out of bounds, no problem
                 x[..., time_start:time_start+8] *= 0.69 # relatively aggresive mask, for a project of this size
                 # gaussian noise - random
-                
+                x = x + 0.01*torch.randn_like(x)
+        return x, torch.tensor(y, dtype=torch.long)
+    
+def dataloader_make(  # adding some default arguments
+        test_csv = "data/processed/test.csv",
+        train_csv = "data/processed/train.csv",
+        val_csv = "data/processed/val.csv",
+        bs = 32, #  - noisier gradients  + smoother gradients
+        num_workers = 2, # 2 prepare batches while GPU trains (no bottleneck)
+        pin = True, # prevent paging - no movement into hard disk
+):
+    # create instances of custom class
+    train_ds = sample_example_loader(train_csv, augment=True)
+    test_ds = sample_example_loader(test_csv, augment=False)
+    val_ds = sample_example_loader(val_csv, augment=False)
+
+    # feeders fro training with correct settings and instructions - iterable dataset 
+    train_dloader = DataLoader(train_ds, batch_size = bs, shuffle=True, num_workers=num_workers, pin_memory=pin)
+    val_dloader = DataLoader(val_ds, batch_size=bs, shuffle=False, num_workers=num_workers, pin_memory=pin)
+    test_dloader = DataLoader(test_ds, batch_size=bs, shuffle=False, num_workers=num_workers, pin_memory=pin)
+
+    return train_dloader, val_dloader, test_dloader
