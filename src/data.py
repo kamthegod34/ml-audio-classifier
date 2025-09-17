@@ -4,10 +4,16 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1] # project root
+PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
+
 CLASS_2_IDX = {"drone": 0, "car":1, "speech": 2} # works as a translator, changing to numbers is better for math
 
 class sample_example_loader(Dataset): # teaches how to load a sample
     def __init__(self, csv_path: str | Path, augment: bool=False):
+        directory_possible = PROCESSED_DIR / csv_path
+        csv_path = directory_possible if directory_possible.exists() else PROJECT_ROOT / csv_path
+
         self.df = pd.read_csv(csv_path)
         self.augment = augment
     
@@ -16,7 +22,10 @@ class sample_example_loader(Dataset): # teaches how to load a sample
     
     def __getitem__(self, i: int):
         row = self.df.iloc[i] # gets a row
-        example_row = np.load(row.path) # loads the chunk (npz) file from where the row came from
+        npz_path = (PROJECT_ROOT / row["path"]).resolve()
+        if not npz_path.exists():
+            raise FileNotFoundError(f"File listed in CSV not found: {npz_path}")
+        example_row = np.load(npz_path)
         mel = example_row["mel_spec"].astype("float32") # no need for more precision and docs say its default
         # also returns spectrogram array in shape [n_mels, time_frames]
 
