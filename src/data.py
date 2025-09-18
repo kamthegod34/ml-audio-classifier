@@ -2,7 +2,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
+import random
 from torch.utils.data import Dataset, DataLoader
+from utils  import make_dataloader_seeding
+
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1] # project root
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
@@ -44,8 +48,9 @@ class sample_example_loader(Dataset): # teaches how to load a sample
             time = x.shape[-1]
             if time > 0:
                 # time masking
-                time_start = np.random.randint(0, max(1,time - 8)) # np slicing CAN go out of bounds, no problem
-                x[..., time_start:time_start+8] *= 0.69 # relatively aggresive mask, for a project of this size
+                start_high = max(1,time - 8 + 1)
+                time_start = np.random.randint(0, start_high) # np slicing CAN go out of bounds, no problem
+                x[..., time_start:time_start+8] = 0.0 # timemasking like SpecAugment
                 # gaussian noise - random
                 x = x + 0.01*torch.randn_like(x)
         return x, torch.tensor(y, dtype=torch.long)
@@ -57,15 +62,24 @@ def dataloader_make(  # adding some default arguments
         bs = 32, #  - noisier gradients  + smoother gradients
         num_workers = 2, # 2 prepare batches while GPU trains (no bottleneck)
         pin = True, # prevent paging - no movement into hard disk
+        seed: int = 69,
+        drop_last: bool = True # to prevent internal covariate shift ill default to true, 
+                                # but for better reproducibility false is preferred
 ):
+    
+    # create generator and get function for worker init
+    g, worker_init = make_dataloader_seeding(seed)
+
     # create instances of custom class
     train_ds = sample_example_loader(train_csv, augment=True)
     test_ds = sample_example_loader(test_csv, augment=False)
     val_ds = sample_example_loader(val_csv, augment=False)
 
     # feeders fro training with correct settings and instructions - iterable dataset 
-    train_dloader = DataLoader(train_ds, batch_size = bs, shuffle=True, num_workers=num_workers, pin_memory=pin)
-    val_dloader = DataLoader(val_ds, batch_size=bs, shuffle=False, num_workers=num_workers, pin_memory=pin)
-    test_dloader = DataLoader(test_ds, batch_size=bs, shuffle=False, num_workers=num_workers, pin_memory=pin)
+    train_dloader = DataLoader(train_ds, batch_size = bs, shuffle=True, drop_last=drop_last, num_workers=num_workers, 
+                               pin_memory=pin, persistent_workers= num_workers > 0,
+                               worker_init_fn=worker_init, generator=g)
+    val_dloader = DataLoader(val_ds, batch_size=bs, shuffle=False, drop_last=False, num_workers=num_workers, pin_memory=pin)
+    test_dloader = DataLoader(test_ds, batch_size=bs, shuffle=False, drop_last=False, num_workers=num_workers, pin_memory=pin)
 
     return train_dloader, val_dloader, test_dloader
