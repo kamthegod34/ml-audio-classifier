@@ -1,6 +1,7 @@
 # ignore all audio files in raw data folder except .gitkeep
 data/raw/**
 !data/raw/**/.gitkeep
+!data/raw/.gitkeep 
 *.wav
 *.mp3
 *.flac
@@ -14,3 +15,13 @@ __pycache__/
 data/processed/npz/
 data/processed/*.csv
 data/processed/metadata.json
+
+# prevent best model from being pushed
+*.pt
+*.pth
+
+# ignore artifacts
+src/artifacts/**
+!src/artifacts/.gitkeep
+!src/artifacts/**/.gitkeep
+# keep any .gitkeep files in subdirectories too

@@ -1,0 +1,20 @@
+training:
+  batch_size: 32
+  lr: 3e-4
+  epochs: 15
+  drop_last: true
+
+system:
+  device: "auto"
+  num_workers: 2
+  pin_memory: true
+
+data:
+  processed_dir: data/processed
+  train_csv: train.csv
+  val_csv: val.csv
+  test_csv: test.csv
+
+repro:
+  seed: 69
+  deterministic: true

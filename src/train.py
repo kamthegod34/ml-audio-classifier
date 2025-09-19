@@ -8,7 +8,9 @@ import yaml
 import os
 from pathlib import Path
 from utils import seedingSet as set_seed
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
+import matplotlib.pyplot as plt
+import numpy as np
 
 def accuracy(logits, target):
     # logits is the raw inputs to final layer [B, C] - C is tensor with correct classes
@@ -45,6 +47,8 @@ def train_epoch(model, loader, optimizer, loss_func, device, use_nb: bool):
 @torch.no_grad()
 def evaluate(model, loader, loss_func, device, use_nb: bool, description="validation"):
     model.eval() # set to evaluation mode
+    all_preds = []
+    all_targets = []
     total_loss = 0.0
     total_acc = 0.0
     num_samples = 0
@@ -60,21 +64,57 @@ def evaluate(model, loader, loss_func, device, use_nb: bool, description="valida
         total_acc += accuracy(logits, targets) * batchSize
         num_samples += batchSize
 
+        # collect predictions and targets for confusion matrix later
+        pred = logits.argmax(dim=1)
+        all_preds.append(pred.cpu()) # move tensor to cpu before using numpy()
+        all_targets.append(targets.cpu())
+
+    pred_labels = torch.cat(all_preds).numpy() # sklearn likes numpy/lists but not tensors
+    true_labels = torch.cat(all_targets).numpy()
+
     total_acc /= num_samples
     total_loss /= num_samples
 
-    return total_loss, total_acc
+    return total_loss, total_acc, true_labels, pred_labels
 
 def write_confusion_matrix(true_labels, pred_labels, class_names, output_path="artifacts"):
     os.makedirs(output_path, exist_ok=True)
 
     # make classification text report
-    classification_report = classification_report(true_labels, pred_labels, target_names=class_names, 
-                                    digits=4, zero_divsion=0) # zero division, prob unlikely but just in case
+    report_text = classification_report(true_labels, pred_labels, target_names=class_names, 
+                                    digits=4, zero_division=0) # zero division, prob unlikely but just in case
+    
+    with open(os.path.join(output_path, "val_report.txt"), "w", encoding="UTF-8") as f:
+        f.write(report_text)
+
+    # add optional label parameters in case a class doesnt appear we can still have correct matrix shape
+    labels = list(range(len(class_names)))
+    confucius_mtrx = confusion_matrix(true_labels, pred_labels, labels=labels) # pun on confucius
+
+    fig, ax = plt.subplots(figsize=(5,4), dpi=150)
+    im = ax.imshow(confucius_mtrx, interpolation="nearest")
+
+    # give description to figure
+    ax.set_xlabel("Predicted label")
+    ax.set_ylabel("True label")
+    ax.set_title("Confusion Matrix")
+    ax.set_xticks(range(len(class_names)), labels=class_names)
+    ax.set_yticks(range(len(class_names)), labels=class_names)
+    ax.tick_params(axis="x", labelrotation=45)
+    ax.tick_params(axis="y", labelrotation=45)
+
+    # looping across matrix to add numbers in each cell, heatmap from imshow becomes easier to understand
+    for i in range(confucius_mtrx.shape[0]):
+        for j in range(confucius_mtrx.shape[1]):
+            ax.text(j, i, int(confucius_mtrx[i,j]), ha="center", va="center", color="w") # using int is cleaner than float
+
+    fig.tight_layout()
+    fig.savefig(os.path.join(output_path, "val_confusion_matrix.png"), bbox_inches="tight") # bbox_inches removes whitespace
+    plt.close(fig) # prevent memory leaks and just overall good practice
 
 def main():
     seed = 69 # chosen by an honest dice roll :)
-    set_seed(69, deterministic=True) # helps reproducibility
+    set_seed(seed, deterministic=True) # helps reproducibility
 
     CONFIG_PATH = Path(__file__).resolve().parents[1] / "config.yaml"
     config = yaml.safe_load(CONFIG_PATH.read_text())
@@ -156,11 +196,18 @@ def main():
     best_val_acc = 0.0
     for epoch in range(1, epochs+1):
         training_loss, training_acc = train_epoch(model, train_loader, optimizer, loss_func, device, use_nb)
-        validation_loss, validation_acc = evaluate(model, val_loader, loss_func, device, use_nb, description="validation")
+        # collect val loss/accuracy and also predictions/targets on validation set
+        validation_loss, validation_acc, true_labels, pred_labels = evaluate(model, val_loader, loss_func, device, use_nb, description="validation")
         print(f"epoch number: {epoch:02d}, train: {training_loss:.3f}, {training_acc:.3f}, val: {validation_loss:.3f}, {validation_acc:.3f}")
 
         if validation_acc > best_val_acc:
             best_val_acc = validation_acc
+
+            # best epoch artifacts, make special directory
+            best_dir = os.path.join("artifacts", f"best_epoch_{epoch:03d}_acc_{validation_acc:.3f}_seed_{seed}")
+            os.makedirs(best_dir, exist_ok=True)
+
+            # save checkpoint both in epoch directory and then as a best_model.pt
             checkpoint = {
                 "epoch": epoch,
                 "model_state": model.state_dict(),
@@ -174,7 +221,18 @@ def main():
                 "class_to_idx": CLASS_2_IDX
 
             }
-            torch.save(checkpoint, "best_model.pt")
+            torch.save(checkpoint, os.path.join(best_dir, "best_model.pt")) # save in epoch dir
+            torch.save(checkpoint, "best_model.pt") # save in top level dir, always overwriting
+
+            # ID order and dictionary order can be differnt so lets sort it out
+            class_names = [k for k, v in sorted(CLASS_2_IDX.items(), key=lambda item: item[1])]
+
+            # call confusion matrix
+            write_confusion_matrix(true_labels, pred_labels, class_names=class_names, output_path=best_dir)
+
+            # save some raw arrays, for extra analysis if needed
+            np.save(os.path.join(best_dir, "true_labels.npy"), true_labels)
+            np.save(os.path.join(best_dir, "pred_labels.npy"), pred_labels)
             print(f"new best model saved at epoch {epoch:02d} with validation accuracy {best_val_acc:.3f}")
 
 
