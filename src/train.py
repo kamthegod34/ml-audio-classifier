@@ -106,7 +106,7 @@ def write_confusion_matrix(true_labels, pred_labels, class_names, output_path="a
     # looping across matrix to add numbers in each cell, heatmap from imshow becomes easier to understand
     for i in range(confucius_mtrx.shape[0]):
         for j in range(confucius_mtrx.shape[1]):
-            ax.text(j, i, int(confucius_mtrx[i,j]), ha="center", va="center", color="w") # using int is cleaner than float
+            ax.text(j, i, int(confucius_mtrx[i,j]), ha="center", va="center", color="b") # using int is cleaner than float
 
     fig.tight_layout()
     fig.savefig(os.path.join(output_path, "val_confusion_matrix.png"), bbox_inches="tight") # bbox_inches removes whitespace

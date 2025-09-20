@@ -75,7 +75,7 @@ def dataloader_make(  # adding some default arguments
     test_ds = sample_example_loader(test_csv, augment=False)
     val_ds = sample_example_loader(val_csv, augment=False)
 
-    # feeders fro training with correct settings and instructions - iterable dataset 
+    # feeders for training with correct settings and instructions - iterable dataset 
     train_dloader = DataLoader(train_ds, batch_size = bs, shuffle=True, drop_last=drop_last, num_workers=num_workers, 
                                pin_memory=pin, persistent_workers= num_workers > 0,
                                worker_init_fn=worker_init, generator=g)
