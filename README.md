@@ -150,6 +150,7 @@ I tracked the documentation I used to complete this.
 
 <details>
 <summary>Details</summary>
+
 - https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html#librosa-feature-melspectrogram 
 - https://librosa.org/doc/latest/generated/librosa.util.fix_length.html#librosa.util.fix_length 
 - https://librosa.org/doc/latest/generated/librosa.power_to_db.html#librosa-power-to-db 
@@ -277,4 +278,5 @@ I tracked the documentation I used to complete this.
 - https://numpy.org/devdocs/reference/generated/numpy.save.html 
 - https://spec.commonmark.org/0.31.2/ 
 - https://c3.ai/glossary/data-science/f1-score/ 
+
 </details>
