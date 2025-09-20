@@ -149,6 +149,7 @@ I tracked the documentation I used to complete this.
 **Disclaimer**: the order of the documentation is roughly the order I used it in but not completely. Also I did not include every single page of documentation, this may because I did not think it was important enough or I simply forgot, it more likely the latter than the former.
 
 <details>
+<summary>Details</summary>
 - https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html#librosa-feature-melspectrogram 
 - https://librosa.org/doc/latest/generated/librosa.util.fix_length.html#librosa.util.fix_length 
 - https://librosa.org/doc/latest/generated/librosa.power_to_db.html#librosa-power-to-db 
