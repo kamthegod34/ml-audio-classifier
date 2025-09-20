@@ -143,6 +143,7 @@ Here I will comment on the code, just general comments I picked up along the way
 - When creating from the numpy arrays to tensors one can use `tensor.from_numpy()` instead of `tensor()` I decided against that since I did not want both the tensor and the numpy array to have a shared storage since in almost all use cases with these spectrograms, no changes will be made after they have been processed so its safer to just use `tensor()`
 - I use snake_case throughout almost the entire code but I will have times that I use camelCase, if I did not fix it it is cause I find it alright or I missed it.
 - I used PEP-8 official Python style guide, not to the tea but in the holistic sense.
+- Used `tdqm` over Python’s built-in progress bar for cleaner, more informative and aesthetic appeal.
 
 ## Documentation I used
 I tracked the documentation I used to complete this. 
@@ -215,7 +216,7 @@ I tracked the documentation I used to complete this.
 - https://docs.pytorch.org/docs/stable/optim.html 
 - https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/ 
 - https://github.com/tqdm/tqdm 
-- https://tqdm.github.io/ faster than python progress bar
+- https://tqdm.github.io/ 
 - https://tqdm.github.io/docs/tqdm/#set_description  
 - https://docs.pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam 
 - https://discuss.pytorch.org/t/how-to-check-if-model-is-on-cuda/180/6 
