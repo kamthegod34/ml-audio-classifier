@@ -12,7 +12,7 @@ import argparse
 DIR_RAW = Path("data/raw")
 DIR_PROCESSED = Path("data/processed")
 NPZ_DIR = DIR_PROCESSED / "npz"
-CLASSES = ["car", "drone", "speech"]
+CLASSES = ["drone", "car", "speech"]
 
 # audio parameters
 SAMPLE_RATE = 16000

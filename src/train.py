@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam
 from tqdm import tqdm
-from data import dataloader_make, CLASS_2_IDX
-from model import small_CNN
+from .data import dataloader_make, CLASS_2_IDX
+from .model import small_CNN
 import yaml
 import os
 from pathlib import Path
-from utils import seedingSet as set_seed
+from .utils import seedingSet as set_seed
 from sklearn.metrics import confusion_matrix, classification_report
 import matplotlib.pyplot as plt
 import numpy as np

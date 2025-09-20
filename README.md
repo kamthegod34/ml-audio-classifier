@@ -14,24 +14,24 @@ You have multiple options for how you want to create your dataset, either
 - Provide **YouTube links**
 - Upload a **Google Drive Folder ID** (I have a public speech folder for publicly available)
 ```bash
-python download_from_youtube.py
-python download_speech_from_drive.py
+python -m src.download_from_youtube
+python -m src.download_speech_from_drive
 ```
 
 You can then convert raw audio into *.npz* spectrograms and split into *train.csv*, *val.csv* and *test.csv*
 ```bash
-python preprocess.py
+python -m src.preprocess
 ```
 
 If you ever need to reset the processed files(including _.csv_ files and _.json files_). You can just run:
 ```bash
-python reset_processed.py
+python -m src.reset_processed
 ```
 
 ### Train the model
 Now you have all the necessary *.csv*,*.json* and *.npz* files to begin training. 
 ```bash
-python train.py
+python -m src.train
 ```
 This will return to you `best_model.pt` and within the `artifacts/` directory you have
 - `best_model.pt`
@@ -42,6 +42,7 @@ This will return to you `best_model.pt` and within the `artifacts/` directory yo
 Training logs are *also* shown on the CLI.
 
 ### Sanity and Debug checks
+**Important:** to run this you need to do this from the **repo root**, this is due to `sys.path.append()` I utilized
 Although there `train.py` and other scripts include internal sanity checks, but I’ve also added extra ones…: 
 ```bash
 python notebooks/00_sanity_check.py
@@ -71,9 +72,9 @@ In `model.py` we create a simple standard CNN which goes through three convoluti
 Combining the `data.py` utility and the `model.py` setup we are able to train the dataset. As a sanity check, we first just train a mini-batch over one epoch this allows us to ensure that the model **can actually overfit**, ensuring that the model, chunking and the rest of the process are working properly. We then train the model across X amount of epochs and display all both train and validation sets accuracy and loss. 
 
 #### Understanding how the model works
-To conceptually understand what the model does, I'll attempt to explain it in a clear manner. We begin at a single channel, which inversely relates to resolution, it is how much input from the tensors are we allowing into our model. As we pool the data we shrink our map and zoom out, making our resolution decrease but our channels increase, therefore we capture coarses features rather than finer ones: going from **shallower layers**(capture fine details) -> **deeper layers**(capture complex/abstract features). The model adjusts its weights - these can be thought of as cogs that decide how the model predicts - and after every layer it adapts improving on itself after each new feature. After the final pool we flatten the data, this means breaking down our X size tensors into [B, C] from in our case [B, C, 1 , 1]. Conceputally, think about a long array of "tables" with size[1,1] which can therefore just be transformed into a normal array or in the case of pytorch a 2D tensor.
+To conceptually understand what the model does, I'll attempt to explain it in a clear manner. We begin at a single channel, which inversely relates to resolution, it is how much input from the tensors are we allowing into our model. As we pool the data we shrink our map and zoom out, making our resolution decrease but our channels increase, therefore we capture coarses features rather than finer ones: going from **shallower layers**(capture fine details) -> **deeper layers**(capture complex/abstract features). The model adjusts its weights - these can be thought of as cogs that decide how the model predicts - and after every layer it adapts improving on itself after each new feature. After the final pool we flatten the data, this means breaking down our X size tensors into [B, C] from in our case [B, C, 1 , 1]. Conceptually, think about a long array of "tables" with size[1,1] which can therefore just be transformed into a normal array or in the case of pytorch a 2D tensor.
 
-Although I used lots of documentation, an essential document that hleped me train my classifier was "https://docs.pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html"  
+Although I used lots of documentation, an essential document that helped me train my classifier was "https://docs.pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html"  
 
 #### Forward pass and backward pass
 Furthermore, a neural network you got forward pass, which in short just predicts + measures how wrong we are. Then there is the backward pass which is - figure out how to nudge each weight to make predictions less wrong. The forward pass does the math and compares the outputs using the **loss function** while the backward pass calculates how much each parameter contributed to each error, computes gradients(partial derivates wrt each weight) and then stores these gradients inside each parameter tensor.
@@ -85,7 +86,7 @@ The way I like to imagine training for a backwards pass on a neural network: Tra
 **CrossEntropyLoss** in simple terms finds out how much different the predicted labels are to the true ones. It takes raw scores(logits) and turns them into a probability distribution, this in other terms is called **softmax**. The package works the following way: if the model is perfect -> loss is 0, if confused(uniform prediction) -> loss is aprox. 1.1, if confident but wrong -> loss is huge 5+. In short, **CrossEntropyLoss** punishes confident mistakes hard, while rewarding confident correct answers.
 
 #### Seeding
-To allow for the reproducibility of the code I ensured that both the `preprocess.py` would create seeded train/val/test sets and also in `train.py` the model would give the same results if the input parameters were the same. This allows for debugging to become simpler - its easier to spot errors since there is no random chance at play and also allows for full reproducibility, comparing of accuracies between model parameteres. However, seeding ≠ full determinism, this is since I have not enforced deterministic kernels, since for most ML training bit for bit identical implmentation is not necessary, it also hurts performance speed and just general unecessary strictness.
+To allow for the reproducibility of the code I ensured that both the `preprocess.py` would create seeded train/val/test sets and also in `train.py` the model would give the same results if the input parameters were the same. This allows for debugging to become simpler - its easier to spot errors since there is no random chance at play and also allows for full reproducibility, comparing of accuracies between model parameters. However, seeding ≠ full determinism, this is since I have not enforced deterministic kernels, since for most ML training bit for bit identical implmentation is not necessary, it also hurts performance speed and just general unnecessary strictness.
 
 #### Adam optimizer
 An optimizer is updates the model's parameters using information from the **loss function** and its gradients. The Adam optimizer is just one of many optimizers available on PyTorch. The Adam optimizer:
@@ -126,7 +127,7 @@ After training with the default configuration you can expect for a `best_epoch_0
 Here I will comment on the code, just general comments I picked up along the way that more interested readers can read over. The comments are rather extensive, look through documentation if necessary.
 
 - Used `MaxPool2d()` since it could capture the strongest activation, then using `AdaptiveAvgPool2d` since it would get the average of all these activations and keep the result balanced
-- One can implment the class torchvision.transforms.v2.GaussianNoise() to help implement Gaussian noise, however I feel like the "barebones" method I implemented does just a good a job and is clearer to understand. Furthermore, extra overhead is not necessary, and it is not a standard bringing in an image into the class then applying all the augmentations to it, like  a standalone augmentation class.
+- One can implement the class torchvision.transforms.v2.GaussianNoise() to help implement Gaussian noise, however I feel like the "barebones" method I implemented does just a good a job and is clearer to understand. Furthermore, extra overhead is not necessary, and it is not a standard bringing in an image into the class then applying all the augmentations to it, like  a standalone augmentation class.
 - Since numpy sometimes stores its own values as `numpy.dtype.str` it might look like a string but its actually a numpy string, therefore if I use `str()` to convert what looks like a string into a string its probably due to this
 - It is a common convention in pytorch to refer to final dimension with [-1] instead of [...] cause you might add more dimensions later on or even remove them
 - `.item()` only works for 0D tensors while `.float` can turn boolean expressions into numbers and works for B size tensors.
@@ -136,8 +137,8 @@ Here I will comment on the code, just general comments I picked up along the way
 - I added sanity checks so that `non_blocking` and `pin_memory` so that even in `config.yaml` the users incorrect parameters with respect to their hardware would raise no warnings, keeping the code cleaner. I basically gave the parameters in `config.yaml` with respect to this scenario a "false freedom".
 - When I used `np.random.randint(low, high)`, you need to consider that it is high exclusive so if you do T-8 you will actually get T-8 -1 which means you'll never truly get the final batch making you miss data. Therefore, I explicitly added +1, so its clear that we are using 8 as our range.
 - train/val/test split is seeded, you’ll get repeatable experiments. The exact NPZ filenames don’t affect model behavior.
-- Back in older versions of matploblib you had the Old style (set_xticks + set_xticklabels) required two calls: one to set tick positions, another to set their labels. But now you can just join it in .set_xticks(ticks, labels=...), so in the name of innovation I picked that.
-- When using `Dataloader` there is no need to `import pickle` because `DataLoader` already calls pickle internally by itself, when spawining extra workers for multiprocessing. That also means you cant have lambda function in your `Dataset` due it not having a consistent name and it only existing in the memory during that runtime.
+- Back in older versions of `matploblib` you had the Old style `(set_xticks + set_xticklabels)` required two calls: one to set tick positions, another to set their labels. But now you can just join it in `.set_xticks(ticks, labels=...)`, so in the name of innovation I picked that.
+- When using `Dataloader` there is no need to `import pickle` because `DataLoader` already calls pickle internally by itself, when spawning extra workers for multiprocessing. That also means you cant have lambda function in your `Dataset` due it not having a consistent name and it only existing in the memory during that runtime.
 - When using DataLoader I decided not to use the argument `drop_last` only because the personal dataset that I was using was large enough and compared to the batch size of 32 it would not change the gradients nor the loss function of the program. However if you want reproducibility or are using a mutli-GPU system where batch size across devices matters then you probably would want to turn it on.
 - When trying to add gaussian noise, using `randn` like so `x = x + 0.01*torch.randn(x.shape)` works because you get the shape of the tensor so you can create a 2D tensor that has random values. However the result from `.randn()` is automatically going to have as its internal `.device()` as CPU and if x tensor is on the GPU which it _probably_ will be there will an error. From the documentation directly “It is important to know that in order to do computation involving two or more tensors, all of the tensors must be on the same device.”
 - When creating from the numpy arrays to tensors one can use `tensor.from_numpy()` instead of `tensor()` I decided against that since I did not want both the tensor and the numpy array to have a shared storage since in almost all use cases with these spectrograms, no changes will be made after they have been processed so its safer to just use `tensor()`
@@ -213,6 +214,7 @@ I tracked the documentation I used to complete this.
 - https://docs.pytorch.org/docs/stable/generated/torch.nn.Flatten.html 
 - https://discuss.pytorch.org/t/what-is-forward-and-when-must-you-define-it/136969 
 - https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html 
+- https://realpython.com/python-modules-packages/
 - https://docs.pytorch.org/docs/stable/optim.html 
 - https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/ 
 - https://github.com/tqdm/tqdm 

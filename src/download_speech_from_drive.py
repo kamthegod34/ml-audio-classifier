@@ -1,6 +1,5 @@
 from pathlib import Path
 import zipfile
-import sys
 import gdown
 from pydub import AudioSegment
 import argparse
