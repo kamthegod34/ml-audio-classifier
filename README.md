@@ -89,7 +89,7 @@ The way I like to imagine training for a backwards pass on a neural network: Tra
 To allow for the reproducibility of the code I ensured that both the `preprocess.py` would create seeded train/val/test sets and also in `train.py` the model would give the same results if the input parameters were the same. This allows for debugging to become simpler - its easier to spot errors since there is no random chance at play and also allows for full reproducibility, comparing of accuracies between model parameters. However, seeding ≠ full determinism, this is since I have not enforced deterministic kernels, since for most ML training bit for bit identical implmentation is not necessary, it also hurts performance speed and just general unnecessary strictness.
 
 #### Adam optimizer
-An optimizer is updates the model's parameters using information from the **loss function** and its gradients. The Adam optimizer is just one of many optimizers available on PyTorch. The Adam optimizer:
+An optimizer updates the model's parameters using information from the **loss function** and its gradients. The Adam optimizer is just one of many optimizers available on PyTorch. The Adam optimizer:
 - fast, low long term convergence -> basically first few epochs it reduces loss fast and then slows down a lot
 - robust to noisy small batch gradients (bs=32)
 - works well when data is limited, don't have to tune learning rates per layer(Adam figures out learning rates by layer)
