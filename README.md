@@ -104,7 +104,7 @@ For each **sanity or debug check** the function of each file is the following: `
 Holds all hyperparameters that the user can change(batch size, learning rate, paths, seeding) so you can tweak experiments without ever having to touch the code. Its a convenient form of trying different inputs to test outputs, without going into the extensive code.
 
 ### Results
-The two folders *pred_labels.npy* and *true_labels.npy* give you the raw values if ever needed for deeper analysis, while the *val_confusion_matrix.png* and *val_report.txt* will give you the precision, recall and F1 score. The F1 score being a harmonic between precision and recall, therefore it punishes imbalances greatly, it wants both variables to be good if one is bad the F1 score drops with it. The **confusion matrix** is just simple visual representation of the **validation report**.
+The two folders `pred_labels.npy` and `true_labels.npy` give you the raw values if ever needed for deeper analysis, while the *val_confusion_matrix.png* and *val_report.txt* will give you the precision, recall and F1 score. The F1 score being a harmonic between precision and recall, therefore it punishes imbalances greatly, it wants both variables to be good if one is bad the F1 score drops with it. The **confusion matrix** is just simple visual representation of the **validation report**.
 
 After training with the default configuration you can expect for a `best_epoch_004_acc_0.916_seed_69` something like this as your `val_report.txt`
 
