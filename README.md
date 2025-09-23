@@ -50,7 +50,7 @@ python notebooks/01_iterable_dataloader_check.py
 ```
 
 ## Overview
-Classify drone, car and speech sounds into their respective classes. However, due to the processing nature of the repository any users can upload the sounds of their choice and therefore, classify realistically **any amount** of sound classes, from any origin.
+Classify drone, car and speech sounds into their respective classes. However, due to the processing nature of the repository any users can upload the sounds of their choice and therefore, classify realistically **any amount** of sound classes, from any origin. - excuse typos :)
 
 #### Repo workflow diagram
 ```
@@ -67,7 +67,7 @@ You can reset your dataset using the `reset_processed.py` file which brings ever
 #### Understanding the workflow from dataset to trained results
 Then we have `data.py` which uses pytorch's `torch.utils.data` which utilizes the `Dataset` and `Dataloader` classes which create custom instruction examples in `Dataset` and then `Dataloader` runs through them to create iterable datasets that can then be turned into tensors and used by the model to train itself.
 
-In `model.py` we create a simple standard CNN which goes through three convolution layers, two pooling layers and then one global pool(reducing each feature map into just one value), taking the highest value in the map. The `ReLU()` class has the purpose of preventing the convolutions, to just become a stack of linear transformations; zeroing out we features and enhancing the more potent ones - in short makes a region more jagged and different. 
+In `model.py` we create a simple standard CNN which goes through three convolution layers, two pooling layers and then one global pool(reducing each feature map into just one value), taking the highest value in the map. The `ReLU()` class has the purpose of preventing the convolutions, to just become a stack of linear transformations; zeroing out features and enhancing the more potent ones - in short makes a region more jagged and different. 
 
 Combining the `data.py` utility and the `model.py` setup we are able to train the dataset. As a sanity check, we first just train a mini-batch over one epoch this allows us to ensure that the model **can actually overfit**, ensuring that the model, chunking and the rest of the process are working properly. We then train the model across X amount of epochs and display all both train and validation sets accuracy and loss. 
 
